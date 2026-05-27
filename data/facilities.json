@@ -1,0 +1,10 @@
+{
+  "_source": "Gachon University Facility Management System Virtual Data",
+  "rooms": [
+    {"room_id": "AI-401", "building": "AI_Building", "status": "Available", "capacity": 60},
+    {"room_id": "GH-101", "building": "Gachon_Hall", "status": "Occupied", "capacity": 120},
+    {"room_id": "CL-302", "building": "Central_Library", "status": "Available", "capacity": 40},
+    {"room_id": "GC-205", "building": "Global_Center", "status": "Available", "capacity": 80},
+    {"room_id": "SU-501", "building": "Student_Union", "status": "Occupied", "capacity": 50}
+  ]
+}

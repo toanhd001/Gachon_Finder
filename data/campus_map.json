@@ -1,0 +1,25 @@
+{
+  "_source": "Gachon University Campus Map / Kakao Maps API Reference",
+  "buildings": {
+    "Gachon_Hall": {
+      "coordinates": [10, 20],
+      "neighbors": {"AI_Building": 3, "Central_Library": 5}
+    },
+    "AI_Building": {
+      "coordinates": [15, 25],
+      "neighbors": {"Gachon_Hall": 3, "Central_Library": 2, "Student_Union": 6}
+    },
+    "Central_Library": {
+      "coordinates": [20, 20],
+      "neighbors": {"Gachon_Hall": 5, "AI_Building": 2, "Global_Center": 4}
+    },
+    "Student_Union": {
+      "coordinates": [12, 35],
+      "neighbors": {"AI_Building": 6, "Global_Center": 3}
+    },
+    "Global_Center": {
+      "coordinates": [25, 30],
+      "neighbors": {"Central_Library": 4, "Student_Union": 3}
+    }
+  }
+}
