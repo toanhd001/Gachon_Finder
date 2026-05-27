@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import os
 from modules.navigation import CampusGraph, dijkstra_search, a_star_search
-from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity
+from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, filter_rooms_by_capacity
 from modules.traffic import PriorityQueue, EmergencyLog, heap_sort_logs, kruskal_mst
 
 # Môi trường chạy Web UI: Streamlit (요구사항 4번 - 실행 환경 명시)
@@ -121,7 +121,7 @@ with tab1:
 with tab2:
     st.header("강의실 실시간 상태 및 예약 시스템")
     
-    sub_tab1, sub_tab2, sub_tab3 = st.tabs(["해시 테이블 조회", "BST 학번 예약", "정렬 및 이진 탐색"])
+    sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs(["해시 테이블 조회", "BST 학번 예약", "정렬 및 이진 탐색", "Classroom Filter"])
     
     with sub_tab1:
         room_id = st.text_input("조회할 강의실 ID 입력 (예: AI-401, GH-101)").strip()
@@ -169,6 +169,35 @@ with tab2:
                 st.success(f"🎯 매칭 성공: {match['room_id']} (수용인원: {match['capacity']}명)")
             else:
                 st.error("해당 수용 인원을 가진 강의실이 없습니다.")
+
+    with sub_tab4:
+        st.subheader("Interactive Classroom Data Table")
+        sorted_rooms = quick_sort_rooms(facility_data["rooms"])
+        capacities = [room["capacity"] for room in sorted_rooms]
+        min_capacity = min(capacities)
+        max_capacity = max(capacities)
+        selected_capacity = st.slider(
+            "Capacity range",
+            min_value=min_capacity,
+            max_value=max_capacity,
+            value=(min_capacity, max_capacity),
+            step=10,
+        )
+        filtered_rooms = filter_rooms_by_capacity(
+            sorted_rooms,
+            selected_capacity[0],
+            selected_capacity[1],
+        )
+
+        available_only = st.checkbox("Show available rooms only")
+        if available_only:
+            filtered_rooms = [
+                room for room in filtered_rooms
+                if room["status"] == "Available"
+            ]
+
+        st.metric("Matching rooms", len(filtered_rooms))
+        st.dataframe(filtered_rooms, use_container_width=True)
 
 # =====================================================================
 # TAB 3: Member 3 Logic

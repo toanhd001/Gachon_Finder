@@ -105,3 +105,11 @@ def binary_search_by_capacity(sorted_rooms, target_capacity):
         else:
             high = mid - 1
     return None
+
+
+def filter_rooms_by_capacity(room_list, min_capacity, max_capacity):
+    filtered_rooms = []
+    for room in room_list:
+        if min_capacity <= room['capacity'] <= max_capacity:
+            filtered_rooms.append(room)
+    return quick_sort_rooms(filtered_rooms)
