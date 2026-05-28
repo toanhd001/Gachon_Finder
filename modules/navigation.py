@@ -1,19 +1,21 @@
 import math
+import heapq
 
-# =====================================================================
-# [Member 1] 자료구조: 최소 힙 (Min-Heap)
-# 선택 이유: 다익스트라 알고리즘에서 최단 거리 정점을 O(log N)만에 추출하기 위함.
-# =====================================================================
 class MinHeap:
+    """
+    [Member 1] Custom Min-Heap implementation for priority queue operations.
+    Used in Dijkstra and A* to extract the node with the minimum cost in O(log N).
+    """
     def __init__(self):
         self.heap = []
 
     def push(self, element):
-        # element format: (cost, node)
+        """Adds a new element (cost, node) to the heap."""
         self.heap.append(element)
         self._up_heap(len(self.heap) - 1)
 
     def pop(self):
+        """Removes and returns the minimum element from the heap."""
         if not self.heap:
             return None
         if len(self.heap) == 1:
@@ -25,6 +27,7 @@ class MinHeap:
         return root
 
     def is_empty(self):
+        """Returns True if the heap is empty."""
         return len(self.heap) == 0
 
     def _up_heap(self, index):
@@ -48,33 +51,36 @@ class MinHeap:
             self._down_heap(smallest)
 
 
-# =====================================================================
-# [Member 1] 자료구조: 인접 리스트 그래프 (Adjacency List Graph)
-# 선택 이유: 캠퍼스 맵은 간선이 적은 희소 그래프이므로 메모리 절약을 위해 인접 리스트 채택.
-# =====================================================================
 class CampusGraph:
+    """
+    [Member 1] Adjacency List Graph representing the campus map.
+    Chosen for memory efficiency in sparse graphs like a campus layout.
+    """
     def __init__(self, json_data):
         self.graph = {}
         self.coordinates = {}
         self._load_data(json_data)
 
     def _load_data(self, json_data):
+        """Parses building and neighbor data from JSON."""
         for node, info in json_data["buildings"].items():
             self.graph[node] = info["neighbors"]
             self.coordinates[node] = info["coordinates"]
 
     def get_neighbors(self, node):
+        """Returns a dictionary of neighbors and their weights for a given node."""
         return self.graph.get(node, {})
 
     def get_coordinates(self, node):
+        """Returns the (x, y) coordinates of a node."""
         return self.coordinates.get(node, [0, 0])
 
 
-# =====================================================================
-# [Member 1] 알고리즘: 다익스트라 최단 경로 탐색 (Dijkstra Algorithm)
-# =====================================================================
 def dijkstra_search(campus_graph, start, end):
-    # # 최단경로탐색: 다익스트라 알고리즘
+    """
+    [Member 1] Dijkstra's algorithm to find the shortest path between two nodes.
+    Guarantees the shortest path in a graph with non-negative edge weights.
+    """
     distances = {node: float('inf') for node in campus_graph.graph}
     distances[start] = 0
     
@@ -102,14 +108,13 @@ def dijkstra_search(campus_graph, start, end):
     return _reconstruct_path(precursors, start, end), distances[end]
 
 
-# =====================================================================
-# [Member 1] 알고리즘: A* 탐색 알고리즘 (A* Search Algorithm)
-# 선택 이유: 휴리스틱(유클리드 거리)을 도입하여 목적지 방향의 노드를 우선 탐색, 속도 최적화.
-# =====================================================================
 def a_star_search(campus_graph, start, end):
-    # # 최단경로탐색: A* 알고리즘
+    """
+    [Member 1] A* search algorithm for faster pathfinding.
+    Uses a heuristic (Euclidean distance) to prioritize exploration towards the goal.
+    """
     def heuristic(node1, node2):
-        # 유클리드 거리 계산 수식: $h(n) = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}$
+        # Euclidean distance formula: sqrt((x1-x2)^2 + (y1-y2)^2)
         c1 = campus_graph.get_coordinates(node1)
         c2 = campus_graph.get_coordinates(node2)
         return math.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
@@ -143,10 +148,11 @@ def a_star_search(campus_graph, start, end):
 
 
 def _reconstruct_path(precursors, start, end):
+    """Helper function to backtrack and build the path from search results."""
     path = []
     current = end
     while current is not None:
         path.append(current)
         current = precursors[current]
     path.reverse()
-    return path if path[0] == start else []
+    return path if path and path[0] == start else []
