@@ -1,25 +1,53 @@
 {
   "_source": "Gachon University Campus Map / Kakao Maps API Reference",
   "buildings": {
-    "Gachon_Hall": {
+    "가천관 (Gachon Hall)": {
       "coordinates": [10, 20],
-      "neighbors": {"AI_Building": 3, "Central_Library": 5}
+      "neighbors": {"AI공학관 (AI Building)": 3, "중앙도서관 (Central Library)": 5, "비전타워 (Vision Tower)": 4}
     },
-    "AI_Building": {
+    "AI공학관 (AI Building)": {
       "coordinates": [15, 25],
-      "neighbors": {"Gachon_Hall": 3, "Central_Library": 2, "Student_Union": 6}
+      "neighbors": {"가천관 (Gachon Hall)": 3, "중앙도서관 (Central Library)": 2, "학생회관 (Student Union)": 6}
     },
-    "Central_Library": {
+    "중앙도서관 (Central Library)": {
       "coordinates": [20, 20],
-      "neighbors": {"Gachon_Hall": 5, "AI_Building": 2, "Global_Center": 4}
+      "neighbors": {"가천관 (Gachon Hall)": 5, "AI공학관 (AI Building)": 2, "글로벌센터 (Global Center)": 4, "전자정보도서관 (Digital Library)": 3}
     },
-    "Student_Union": {
+    "학생회관 (Student Union)": {
       "coordinates": [12, 35],
-      "neighbors": {"AI_Building": 6, "Global_Center": 3}
+      "neighbors": {"AI공학관 (AI Building)": 6, "글로벌센터 (Global Center)": 3, "비전타워 (Vision Tower)": 5}
     },
-    "Global_Center": {
+    "글로벌센터 (Global Center)": {
       "coordinates": [25, 30],
-      "neighbors": {"Central_Library": 4, "Student_Union": 3}
+      "neighbors": {"중앙도서관 (Central Library)": 4, "학생회관 (Student Union)": 3, "예술대학2 (Art & Design 2)": 7}
+    },
+    "비전타워 (Vision Tower)": {
+      "coordinates": [5, 15],
+      "neighbors": {"가천관 (Gachon Hall)": 4, "학생회관 (Student Union)": 5, "정문 (Main Gate)": 2}
+    },
+    "정문 (Main Gate)": {
+      "coordinates": [0, 10],
+      "neighbors": {"비전타워 (Vision Tower)": 2}
+    },
+    "전자정보도서관 (Digital Library)": {
+      "coordinates": [22, 18],
+      "neighbors": {"중앙도서관 (Central Library)": 3, "바이오나노연구원 (Bionano Research)": 5}
+    },
+    "바이오나노연구원 (Bionano Research)": {
+      "coordinates": [28, 15],
+      "neighbors": {"전자정보도서관 (Digital Library)": 5, "한의과대학 (Oriental Medicine)": 4}
+    },
+    "한의과대학 (Oriental Medicine)": {
+      "coordinates": [32, 12],
+      "neighbors": {"바이오나노연구원 (Bionano Research)": 4}
+    },
+    "예술대학2 (Art & Design 2)": {
+      "coordinates": [30, 35],
+      "neighbors": {"글로벌센터 (Global Center)": 7, "교육대학원 (Graduate Education)": 3}
+    },
+    "교육대학원 (Graduate Education)": {
+      "coordinates": [35, 38],
+      "neighbors": {"예술대학2 (Art & Design 2)": 3}
     }
   }
 }

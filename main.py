@@ -33,7 +33,6 @@ if 'emergency_records' not in st.session_state:
 st.title("🏫 Gachon Campus Path & Resource Finder Pro")
 st.caption("2026 알고리즘 기말 프로젝트 결과물 - 각 멤버별 독립 모듈화 구현")
 
-# Chia Tab tương ứng với 3 Module độc lập của 3 thành viên (Đáp ứng yêu cầu phân tách phân hệ)
 tab1, tab2, tab3 = st.tabs([
     "📍 [Member 1] 내비게이션 (Graph/Dijkstra/A*)", 
     "🔑 [Member 2] 강의실 관리 (Hash/BST/Sort)", 
@@ -115,6 +114,31 @@ with tab1:
     
     # 렌더링 엔진 구동
     st.graphviz_chart(dot_src)
+
+    # =====================================================================
+    # [Member 1 New Feature] 상세 길찾기 가이드 (Step-by-Step Table)
+    # =====================================================================
+    if path:
+        st.markdown("---")
+        st.subheader("📋 상세 경로 안내 (Step-by-Step Guide)")
+        
+        directions = []
+        total_time = 0
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i+1]
+            weight = gachon_graph.get_neighbors(u).get(v, 0)
+            total_time += weight
+            directions.append({
+                "순서": i + 1,
+                "출발": u,
+                "도착": v,
+                "소요 시간": f"{weight}분",
+                "누적 시간": f"{total_time}분"
+            })
+        
+        st.table(directions)
+        st.info(f"💡 **팁:** {start}에서 {end}까지 총 {len(path)}개의 지점을 거쳐 이동하며, 예상 소요 시간은 {cost}분입니다.")
+
 # =====================================================================
 # TAB 2: Member 2 Logic
 # =====================================================================
