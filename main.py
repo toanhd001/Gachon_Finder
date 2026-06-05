@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 import os
-from modules.navigation import CampusGraph, dijkstra_search, a_star_search
+from modules.navigation import CampusGraph, render_navigation_tab
 from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, filter_rooms_by_capacity
 from modules.traffic import PriorityQueue, EmergencyLog, heap_sort_logs, kruskal_mst
 
@@ -43,101 +43,7 @@ tab1, tab2, tab3 = st.tabs([
 # TAB 1: Member 1 Logic 
 # =====================================================================
 with tab1:
-    st.header("캠퍼스 최단 경로 탐색 및 시각화 시스템")
-    buildings = list(gachon_graph.graph.keys())
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        start = st.selectbox("출발지 선택", buildings, key="start")
-    with col2:
-        end = st.selectbox("목적지 선택", buildings, key="end")
-    with col3:
-        algo = st.radio("알고리즘 선택", ["Dijkstra", "A* Search"])
-
-    path, cost = [], 0
-    if st.button("경로 탐색 및 그래프 시각화 실행", type="primary"):
-        if start == end:
-            st.warning("출발지와 목적지가 같습니다.")
-        else:
-            # # 최단경로탐색 알고리즘 호출
-            if algo == "Dijkstra":
-                path, cost = dijkstra_search(gachon_graph, start, end)
-            else:
-                path, cost = a_star_search(gachon_graph, start, end)
-            
-            st.success(f"🏁 탐색 완료! 총 소요시간: **{cost}분**")
-            st.info(f"🛣️ **추천 경로:** {' ➔ '.join(path)}")
-
-    st.markdown("---")
-    st.subheader("📊 가천대학교 캠퍼스 맵 토폴로지 시각화")
-    st.caption("레드 라인: 알고리즘이 연산한 최적 최단 경로 (Green: 출발지, Orange: 도착지)")
-
-    # Graphviz를 이용한 동적 DOT 스크립트 생성 (정적 라이브러리 미사용)
-    dot_src = "digraph G {\n"
-    dot_src += '  graph [rankdir=LR, bgcolor="#F9F9F9"];\n'
-    dot_src += '  node [fontname="Malgun Gothic", shape=circle, style="filled", width=1.2, fixedsize=true];\n'
-    dot_src += '  edge [fontname="Malgun Gothic", fontsize=10, len=2.0];\n'
-
-    path_set = set(path) if path else set()
-    
-    # 1. 노드 스타일링 (출발/도착/경로/일반 구분)
-    for node in gachon_graph.graph:
-        if path and node == start:
-            dot_src += f'  "{node}" [fillcolor="#2ECC71", fontcolor="white", color="#27AE60", penwidth=3];\n'
-        elif path and node == end:
-            dot_src += f'  "{node}" [fillcolor="#E67E22", fontcolor="white", color="#D35400", penwidth=3];\n'
-        elif node in path_set:
-            dot_src += f'  "{node}" [fillcolor="#F1C40F", fontcolor="black", color="#F39C12", penwidth=2];\n'
-        else:
-            dot_src += f'  "{node}" [fillcolor="#ECF0F1", fontcolor="#2C3E50", color="#BDC3C7"];\n'
-
-    # 2. 간선 스타일링 및 가중치 표시 (최단 경로 무방향 연동 그래프 생성)
-    visited_edges = set()
-    for u in gachon_graph.graph:
-        for v, w in gachon_graph.get_neighbors(u).items():
-            if (v, u) not in visited_edges:
-                # 현재 간선이 최단 경로 내에 포함되는지 검증
-                is_path_edge = False
-                if path:
-                    for i in range(len(path) - 1):
-                        if (path[i] == u and path[i+1] == v) or (path[i] == v and path[i+1] == u):
-                            is_path_edge = True
-                            break
-                
-                if is_path_edge:
-                    dot_src += f'  "{u}" -> "{v}" [label="{w}분", color="#E74C3C", penwidth=4, dir=none];\n'
-                else:
-                    dot_src += f'  "{u}" -> "{v}" [label="{w}분", color="#BDC3C7", style="dashed", dir=none];\n'
-                visited_edges.add((u, v))
-
-    dot_src += "}"
-    
-    # 렌더링 엔진 구동
-    st.graphviz_chart(dot_src)
-
-    # =====================================================================
-    # [Member 1 New Feature] 상세 길찾기 가이드 (Step-by-Step Table)
-    # =====================================================================
-    if path:
-        st.markdown("---")
-        st.subheader("📋 상세 경로 안내 (Step-by-Step Guide)")
-        
-        directions = []
-        total_time = 0
-        for i in range(len(path) - 1):
-            u, v = path[i], path[i+1]
-            weight = gachon_graph.get_neighbors(u).get(v, 0)
-            total_time += weight
-            directions.append({
-                "순서": i + 1,
-                "출발": u,
-                "도착": v,
-                "소요 시간": f"{weight}분",
-                "누적 시간": f"{total_time}분"
-            })
-        
-        st.table(directions)
-        st.info(f"💡 **팁:** {start}에서 {end}까지 총 {len(path)}개의 지점을 거쳐 이동하며, 예상 소요 시간은 {cost}분입니다.")
+    render_navigation_tab(gachon_graph)
 
 # =====================================================================
 # TAB 2: Member 2 Logic

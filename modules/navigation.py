@@ -1,5 +1,6 @@
 import math
-import heapq
+import streamlit as st
+from streamlit_agraph import agraph, Node, Edge, Config
 
 class MinHeap:
     """
@@ -114,7 +115,6 @@ def a_star_search(campus_graph, start, end):
     Uses a heuristic (Euclidean distance) to prioritize exploration towards the goal.
     """
     def heuristic(node1, node2):
-        # Euclidean distance formula: sqrt((x1-x2)^2 + (y1-y2)^2)
         c1 = campus_graph.get_coordinates(node1)
         c2 = campus_graph.get_coordinates(node2)
         return math.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
@@ -156,3 +156,105 @@ def _reconstruct_path(precursors, start, end):
         current = precursors[current]
     path.reverse()
     return path if path and path[0] == start else []
+
+def render_navigation_tab(campus_graph):
+    """
+    [Member 1] Premium Navigation Dashboard using streamlit-agraph.
+    Implements a 2-column layout with interactive graph visualization.
+    """
+    st.header("📍 캠퍼스 최단 경로 탐색 Pro")
+    buildings = list(campus_graph.graph.keys())
+    
+    col1, col2 = st.columns([2, 3])
+    
+    with col1:
+        st.subheader("탐색 설정")
+        start_node = st.selectbox("출발지 선택", buildings, key="nav_start")
+        end_node = st.selectbox("목적지 선택", buildings, key="nav_end")
+        algo = st.radio("알고리즘 선택", ["Dijkstra", "A* Search"], horizontal=True)
+        
+        execute = st.button("🚀 경로 탐색 실행", type="primary", use_container_width=True)
+        
+        path, cost = [], 0
+        if execute:
+            if start_node == end_node:
+                st.warning("⚠️ 출발지와 목적지가 같습니다.")
+            else:
+                if algo == "Dijkstra":
+                    path, cost = dijkstra_search(campus_graph, start_node, end_node)
+                else:
+                    path, cost = a_star_search(campus_graph, start_node, end_node)
+                
+                # Metrics Section
+                m1, m2 = st.columns(2)
+                total_dist = cost * 80  # Assume 80m per minute walking speed
+                m1.metric("Total Distance", f"{total_dist}m")
+                m2.metric("Estimated Time", f"{cost} min")
+                
+                # Step-by-Step Guide
+                st.markdown("---")
+                with st.container():
+                    st.markdown("### 🗺️ Route Guide")
+                    with st.expander("상세 경로 안내 (Step-by-Step)", expanded=True):
+                        for i in range(len(path) - 1):
+                            u, v = path[i], path[i+1]
+                            w = campus_graph.get_neighbors(u).get(v, 0)
+                            st.write(f"🚶 **{u}** ➔ **{v}** ({w}m)")
+                        st.success(f"🏁 **{end_node}** 도착 완료!")
+
+    with col2:
+        # Agraph Visualization
+        nodes = []
+        edges = []
+        
+        path_nodes = set(path)
+        path_edges_set = set()
+        if path:
+            for i in range(len(path) - 1):
+                path_edges_set.add(tuple(sorted((path[i], path[i+1]))))
+        
+        for node in campus_graph.graph:
+            # Dynamic Styling Logic
+            color = "#334155" # Default: Slate Grey
+            size = 18
+            
+            if path:
+                if node == start_node:
+                    color = "#F59E0B" # Start: Amber Gold
+                    size = 28
+                elif node == end_node:
+                    color = "#EF4444" # Destination: Red
+                    size = 28
+                elif node in path_nodes:
+                    color = "#10B981" # Path nodes: Emerald Green
+                    size = 22
+            
+            nodes.append(Node(id=node, label=node, color=color, size=size))
+            
+        visited_edges = set()
+        for u in campus_graph.graph:
+            for v, w in campus_graph.get_neighbors(u).items():
+                edge_key = tuple(sorted((u, v)))
+                if edge_key not in visited_edges:
+                    color = "#E2E8F0" # Default Edge
+                    width = 2
+                    
+                    if edge_key in path_edges_set:
+                        color = "#10B981" # Path Edge: Emerald Green
+                        width = 5
+                    
+                    edges.append(Edge(source=u, target=v, label=f"{w}m", color=color, width=width))
+                    visited_edges.add(edge_key)
+
+        config = Config(
+            width="100%", 
+            height=650, 
+            directed=False, 
+            physics=True, 
+            hierarchical=False,
+            nodeHighlightBehavior=True,
+            highlightColor="#F59E0B",
+            collapsible=False
+        )
+        
+        agraph(nodes=nodes, edges=edges, config=config)
