@@ -2,10 +2,11 @@ import streamlit as st
 import json
 import os
 from modules.navigation import CampusGraph, render_navigation_tab
-from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, filter_rooms_by_capacity
-from modules.traffic import PriorityQueue, EmergencyLog, heap_sort_logs, kruskal_mst
+from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, \
+    filter_rooms_by_capacity
+from modules.book_exchange import render_barter_ui
 
-# Môi trường chạy Web UI: Streamlit (요구사항 4번 - 실행 환경 명시)
+# 실행 환경: Streamlit 웹 UI (요구사항 4번 - 실행 환경 명시)
 st.set_page_config(page_title="Gachon Campus Finder", page_icon="🏫", layout="wide")
 
 # 데이터 로드
@@ -26,21 +27,19 @@ if 'room_handler' not in st.session_state:
 if 'booking_tree' not in st.session_state:
     st.session_state.booking_tree = BookingBST()
 
-if 'emergency_records' not in st.session_state:
-    st.session_state.emergency_records = []
-
 # Title
 st.title("🏫 Gachon Campus Path & Resource Finder Pro")
 st.caption("2026 알고리즘 기말 프로젝트 결과물 - 각 멤버별 독립 모듈화 구현")
 
+# 멤버 3의 알고리즘 명칭을 실제 구현된 KMP로 수정
 tab1, tab2, tab3 = st.tabs([
-    "📍 [Member 1] 내비게이션 (Graph/Dijkstra/A*)", 
-    "🔑 [Member 2] 강의실 관리 (Hash/BST/Sort)", 
-    "🚨 [Member 3] 관제 시스템 (PQ/HeapSort/Kruskal)"
+    "📍 [Member 1] 내비게이션 (Graph/Dijkstra/A*)",
+    "🔑 [Member 2] 강의실 관리 (Hash/BST/Sort)",
+    "🚨 [Member 3] 스마트 교재 물물교환 에코시스템 (DFS/Greedy/KMP)"
 ])
 
 # =====================================================================
-# TAB 1: Member 1 Logic 
+# TAB 1: Member 1 Logic
 # =====================================================================
 with tab1:
     render_navigation_tab(gachon_graph)
@@ -50,9 +49,9 @@ with tab1:
 # =====================================================================
 with tab2:
     st.header("강의실 실시간 상태 및 예약 시스템")
-    
+
     sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs(["해시 테이블 조회", "BST 학번 예약", "정렬 및 이진 탐색", "Classroom Filter"])
-    
+
     with sub_tab1:
         room_id = st.text_input("조회할 강의실 ID 입력 (예: AI-401, GH-101)").strip()
         if st.button("실시간 상태 조회 (O(1))"):
@@ -62,7 +61,7 @@ with tab2:
                 st.json(room)
             else:
                 st.error("등록되지 않은 강의실입니다.")
-                
+
     with sub_tab2:
         c1, c2 = st.columns(2)
         with c1:
@@ -89,7 +88,7 @@ with tab2:
             sorted_rooms = quick_sort_rooms(facility_data["rooms"])
             st.write("📊 정렬 결과 (오름차순):")
             st.dataframe(sorted_rooms)
-            
+
         target_cap = st.number_input("이진 탐색(Binary Search)할 정확한 수용 인원 설정", step=10, value=60)
         if st.button("이진 탐색 시작"):
             sorted_rooms = quick_sort_rooms(facility_data["rooms"])
@@ -130,43 +129,7 @@ with tab2:
         st.dataframe(filtered_rooms, use_container_width=True)
 
 # =====================================================================
-# TAB 3: Member 3 Logic
+# TAB 3: Member 3 Logic (독립 모듈화 완료)
 # =====================================================================
 with tab3:
-    st.header("캠퍼스 교통 제어 및 셔틀 노선 최적화")
-    
-    c1, c2 = st.columns(2)
-    with c1:
-        st.subheader("실시간 긴급 제보 (우선순위 큐 작동)")
-        if st.button("의사 데이터 시뮬레이션 삽입"):
-            pq = PriorityQueue()
-            pq.push(EmergencyLog(3, "AI관 앞 셔틀버스 대기 정체 심화"))
-            pq.push(EmergencyLog(5, "가천관 내부 엘리베이터 고장 고립 사고"))
-            pq.push(EmergencyLog(1, "운동장 물품 분실 신고"))
-            
-            st.session_state.emergency_records = []
-            st.write("📥 **우선순위 큐(Max-Heap)로부터 순차적 추출 결과:**")
-            while not pq.is_empty():
-                log = pq.pop()
-                st.warning(f"🚨 [위험도 {log.priority}] {log.description}")
-                st.session_state.emergency_records.append(log)
-                
-    with c2:
-        st.subheader("위험도 순 정렬 보고서 (Heap Sort)")
-        if st.button("힙 정렬 실행"):
-            if not st.session_state.emergency_records:
-                st.error("왼쪽 메뉴에서 시뮬레이션 데이터를 먼저 삽입하세요.")
-            else:
-                # # 알고리즘: 힙 정렬
-                sorted_logs = heap_sort_logs(st.session_state.emergency_records)
-                for log in sorted_logs:
-                    st.code(f"[위험도 {log.priority}] {log.description}")
-
-    st.markdown("---")
-    st.subheader("🚌 크루스칼(Kruskal) 알고리즘 기반 순환 셔틀버스 최적 노선망 설계")
-    if st.button("MST(최소 신장 트리) 계산"):
-        # # 알고리즘: 크루스칼 알고리즘
-        mst, total_cost = kruskal_mst(gachon_graph)
-        st.success(f"📊 캠퍼스 전체 순회 최소 가중치: **{total_cost}분**")
-        for edge in mst:
-            st.write(f"🔗 연결 노선: `{edge[0]}` ➔ `{edge[1]}` (구간 소요: {edge[2]}분)")
+    render_barter_ui()
