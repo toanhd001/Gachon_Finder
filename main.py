@@ -2,10 +2,11 @@ import streamlit as st
 import json
 import os
 from modules.navigation import CampusGraph, render_navigation_tab
-from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, filter_rooms_by_capacity
-from modules.traffic import render_barter_ui
+from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, \
+    filter_rooms_by_capacity
+from modules.book_exchange import render_barter_ui
 
-# Môi trường chạy Web UI: Streamlit (요구사항 4번 - 실행 환경 명시)
+# 실행 환경: Streamlit 웹 UI (요구사항 4번 - 실행 환경 명시)
 st.set_page_config(page_title="Gachon Campus Finder", page_icon="🏫", layout="wide")
 
 # 데이터 로드
@@ -30,14 +31,15 @@ if 'booking_tree' not in st.session_state:
 st.title("🏫 Gachon Campus Path & Resource Finder Pro")
 st.caption("2026 알고리즘 기말 프로젝트 결과물 - 각 멤버별 독립 모듈화 구현")
 
+# 멤버 3의 알고리즘 명칭을 실제 구현된 KMP로 수정
 tab1, tab2, tab3 = st.tabs([
-    "📍 [Member 1] 내비게이션 (Graph/Dijkstra/A*)", 
-    "🔑 [Member 2] 강의실 관리 (Hash/BST/Sort)", 
-    "🚨 [Member 3] 서적 물물교환 및 포인트 에코시스템 (DFS/Greedy/Trie)"
+    "📍 [Member 1] 내비게이션 (Graph/Dijkstra/A*)",
+    "🔑 [Member 2] 강의실 관리 (Hash/BST/Sort)",
+    "🚨 [Member 3] 스마트 교재 물물교환 에코시스템 (DFS/Greedy/KMP)"
 ])
 
 # =====================================================================
-# TAB 1: Member 1 Logic 
+# TAB 1: Member 1 Logic
 # =====================================================================
 with tab1:
     render_navigation_tab(gachon_graph)
@@ -47,9 +49,9 @@ with tab1:
 # =====================================================================
 with tab2:
     st.header("강의실 실시간 상태 및 예약 시스템")
-    
+
     sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs(["해시 테이블 조회", "BST 학번 예약", "정렬 및 이진 탐색", "Classroom Filter"])
-    
+
     with sub_tab1:
         room_id = st.text_input("조회할 강의실 ID 입력 (예: AI-401, GH-101)").strip()
         if st.button("실시간 상태 조회 (O(1))"):
@@ -59,7 +61,7 @@ with tab2:
                 st.json(room)
             else:
                 st.error("등록되지 않은 강의실입니다.")
-                
+
     with sub_tab2:
         c1, c2 = st.columns(2)
         with c1:
@@ -86,7 +88,7 @@ with tab2:
             sorted_rooms = quick_sort_rooms(facility_data["rooms"])
             st.write("📊 정렬 결과 (오름차순):")
             st.dataframe(sorted_rooms)
-            
+
         target_cap = st.number_input("이진 탐색(Binary Search)할 정확한 수용 인원 설정", step=10, value=60)
         if st.button("이진 탐색 시작"):
             sorted_rooms = quick_sort_rooms(facility_data["rooms"])
@@ -127,7 +129,7 @@ with tab2:
         st.dataframe(filtered_rooms, use_container_width=True)
 
 # =====================================================================
-# TAB 3: Member 3 Logic (Đã được module hóa hoàn toàn)
+# TAB 3: Member 3 Logic (독립 모듈화 완료)
 # =====================================================================
 with tab3:
     render_barter_ui()
