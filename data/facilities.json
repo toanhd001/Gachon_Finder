@@ -1,10 +1,17 @@
 {
   "_source": "Gachon University Facility Management System Virtual Data",
   "rooms": [
-    {"room_id": "AI-401", "building": "AI_Building", "status": "Available", "capacity": 60},
-    {"room_id": "GH-101", "building": "Gachon_Hall", "status": "Occupied", "capacity": 120},
-    {"room_id": "CL-302", "building": "Central_Library", "status": "Available", "capacity": 40},
-    {"room_id": "GC-205", "building": "Global_Center", "status": "Available", "capacity": 80},
-    {"room_id": "SU-501", "building": "Student_Union", "status": "Occupied", "capacity": 50}
+    {"room_id": "AI-401", "building": "AI_Building", "status": "Available", "capacity": 60, "equipment": ["Projector", "Whiteboard"], "floor": 4},
+    {"room_id": "AI-504", "building": "AI_Building", "status": "Available", "capacity": 36, "equipment": ["Smart Board", "Recording"], "floor": 5},
+    {"room_id": "AI-610", "building": "AI_Building", "status": "Maintenance", "capacity": 95, "equipment": ["Projector", "Lab PCs"], "floor": 6},
+    {"room_id": "GH-101", "building": "Gachon_Hall", "status": "Occupied", "capacity": 120, "equipment": ["Auditorium", "Mic"], "floor": 1},
+    {"room_id": "GH-204", "building": "Gachon_Hall", "status": "Available", "capacity": 72, "equipment": ["Projector", "Mic"], "floor": 2},
+    {"room_id": "CL-302", "building": "Central_Library", "status": "Available", "capacity": 40, "equipment": ["Whiteboard", "Quiet Zone"], "floor": 3},
+    {"room_id": "CL-410", "building": "Central_Library", "status": "Occupied", "capacity": 55, "equipment": ["Seminar Table", "Display"], "floor": 4},
+    {"room_id": "GC-205", "building": "Global_Center", "status": "Available", "capacity": 80, "equipment": ["Projector", "Translation Booth"], "floor": 2},
+    {"room_id": "GC-303", "building": "Global_Center", "status": "Available", "capacity": 48, "equipment": ["Whiteboard", "Video Call"], "floor": 3},
+    {"room_id": "SU-501", "building": "Student_Union", "status": "Occupied", "capacity": 50, "equipment": ["Flexible Seats", "Display"], "floor": 5},
+    {"room_id": "SU-210", "building": "Student_Union", "status": "Available", "capacity": 30, "equipment": ["Round Tables", "Whiteboard"], "floor": 2},
+    {"room_id": "VT-B103", "building": "Vision_Tower", "status": "Available", "capacity": 150, "equipment": ["Auditorium", "Mic", "Large Screen"], "floor": -3}
   ]
 }
