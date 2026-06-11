@@ -3,7 +3,7 @@ import json
 import os
 from modules.navigation import CampusGraph, render_navigation_tab
 from modules.booking import RoomHashTable, BookingBST, quick_sort_rooms, binary_search_by_capacity, \
-    filter_rooms_by_capacity
+    filter_rooms_by_capacity, recommend_rooms
 from modules.book_exchange import render_barter_ui
 
 # 실행 환경: Streamlit 웹 UI (요구사항 4번 - 실행 환경 명시)
@@ -48,85 +48,142 @@ with tab1:
 # TAB 2: Member 2 Logic
 # =====================================================================
 with tab2:
-    st.header("강의실 실시간 상태 및 예약 시스템")
+    st.header("Member 2 Classroom Operations Center")
+    st.caption("Hash Table lookup, BST reservations, Quick Sort ranking, Binary Search, and room recommendation.")
 
-    sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs(["해시 테이블 조회", "BST 학번 예약", "정렬 및 이진 탐색", "Classroom Filter"])
+    rooms = st.session_state.room_handler.values()
+    sorted_rooms = quick_sort_rooms(rooms)
+    capacities = [room["capacity"] for room in sorted_rooms]
+    available_count = sum(1 for room in rooms if room["status"] == "Available")
+    occupied_count = sum(1 for room in rooms if room["status"] == "Occupied")
+    maintenance_count = sum(1 for room in rooms if room["status"] == "Maintenance")
+
+    metric_cols = st.columns(4)
+    metric_cols[0].metric("Total rooms", len(rooms))
+    metric_cols[1].metric("Available", available_count)
+    metric_cols[2].metric("Occupied", occupied_count)
+    metric_cols[3].metric("Hash load factor", f"{st.session_state.room_handler.load_factor():.2f}")
+
+    if maintenance_count:
+        st.warning(f"{maintenance_count} room(s) are under maintenance and excluded from default recommendations.")
+
+    sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs([
+        "Hash Lookup",
+        "BST Booking",
+        "Sort & Search",
+        "Smart Filter"
+    ])
 
     with sub_tab1:
-        room_id = st.text_input("조회할 강의실 ID 입력 (예: AI-401, GH-101)").strip()
-        if st.button("실시간 상태 조회 (O(1))"):
-            # # 자료구조: 해시 테이블 검색
-            room = st.session_state.room_handler.search(room_id)
-            if room:
-                st.json(room)
-            else:
-                st.error("등록되지 않은 강의실입니다.")
+        left, right = st.columns([1, 1.2])
+        with left:
+            st.subheader("O(1) classroom lookup")
+            room_options = [room["room_id"] for room in sorted_rooms]
+            room_id = st.selectbox("Room ID", room_options, index=0)
+            if st.button("Lookup room in hash table", type="primary", use_container_width=True):
+                room = st.session_state.room_handler.search(room_id)
+                if room:
+                    st.success(f"{room_id} found in the chaining hash table.")
+                    st.json(room)
+                else:
+                    st.error("Room not found.")
+        with right:
+            st.subheader("Hash bucket diagnostics")
+            st.caption("Shows how room IDs are distributed across chained buckets.")
+            st.dataframe(st.session_state.room_handler.bucket_summary(), use_container_width=True, hide_index=True)
 
     with sub_tab2:
         c1, c2 = st.columns(2)
         with c1:
-            st.subheader("예약 등록")
-            st_id_in = st.number_input("학번 입력 (등록)", step=1, value=202000000)
-            r_id_in = st.text_input("예약할 강의실 ID")
-            if st.button("예약 확정"):
-                st.session_state.booking_tree.insert(st_id_in, r_id_in)
-                st.success("BST에 예약 노드가 삽입되었습니다.")
+            st.subheader("Create or update reservation")
+            st_id_in = st.number_input("Student ID", step=1, value=202000000)
+            available_rooms = [room["room_id"] for room in sorted_rooms if room["status"] == "Available"]
+            r_id_in = st.selectbox("Available room", available_rooms) if available_rooms else None
+            if not available_rooms:
+                st.warning("No rooms are currently available for booking.")
+            if st.button("Confirm reservation", type="primary", use_container_width=True, disabled=not available_rooms):
+                room = st.session_state.room_handler.search(r_id_in)
+                if not room:
+                    st.error("This room ID is not registered.")
+                elif room["status"] != "Available":
+                    st.error("This room is not available right now.")
+                else:
+                    st.session_state.booking_tree.insert(st_id_in, r_id_in)
+                    st.session_state.room_handler.update_status(r_id_in, "Occupied")
+                    st.success(f"Reservation saved in BST: {st_id_in} -> {r_id_in}")
+                    st.rerun()
         with c2:
-            st.subheader("예약 조회")
-            st_id_out = st.number_input("조회할 학번 입력", step=1, value=202000000)
-            if st.button("조회 실행"):
-                # # 자료구조: 이진 탐색 트리 검색
+            st.subheader("Search reservation")
+            st_id_out = st.number_input("Student ID to search", step=1, value=202000000)
+            if st.button("Search BST", use_container_width=True):
                 res = st.session_state.booking_tree.search(st_id_out)
                 if res:
-                    st.info(f"🔍 학번 {st_id_out}님은 현재 **{res.room_id}** 강의실 예약 상태입니다.")
+                    st.info(f"Student {st_id_out} currently reserved **{res.room_id}**.")
                 else:
-                    st.error("예약 내역이 없습니다.")
+                    st.error("No reservation found.")
+
+        st.subheader("BST in-order reservation table")
+        reservation_rows = st.session_state.booking_tree.inorder()
+        if reservation_rows:
+            st.dataframe(reservation_rows, use_container_width=True, hide_index=True)
+        else:
+            st.info("No reservations yet. Add one above to see the BST traversal result.")
 
     with sub_tab3:
-        if st.button("수용 인원 기준 퀵 정렬(Quick Sort) 실행"):
-            # # 알고리즘: 퀵 정렬
-            sorted_rooms = quick_sort_rooms(facility_data["rooms"])
-            st.write("📊 정렬 결과 (오름차순):")
-            st.dataframe(sorted_rooms)
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            st.subheader("Quick Sort by capacity")
+            if st.button("Run Quick Sort", use_container_width=True):
+                st.dataframe(sorted_rooms, use_container_width=True, hide_index=True)
+        with c2:
+            st.subheader("Binary Search exact capacity")
+            target_cap = st.number_input("Capacity to find", step=5, value=60)
+            if st.button("Run Binary Search", use_container_width=True):
+                match = binary_search_by_capacity(sorted_rooms, target_cap)
+                if match:
+                    st.success(f"Match: {match['room_id']} ({match['capacity']} seats)")
+                    st.json(match)
+                else:
+                    st.error("No classroom has exactly that capacity.")
 
-        target_cap = st.number_input("이진 탐색(Binary Search)할 정확한 수용 인원 설정", step=10, value=60)
-        if st.button("이진 탐색 시작"):
-            sorted_rooms = quick_sort_rooms(facility_data["rooms"])
-            # # 알고리즘: 이진 탐색
-            match = binary_search_by_capacity(sorted_rooms, target_cap)
-            if match:
-                st.success(f"🎯 매칭 성공: {match['room_id']} (수용인원: {match['capacity']}명)")
-            else:
-                st.error("해당 수용 인원을 가진 강의실이 없습니다.")
+        st.subheader("Smart room recommendation")
+        buildings = ["Any"] + sorted({room["building"] for room in rooms})
+        rec_cols = st.columns(3)
+        needed_capacity = rec_cols[0].number_input("Minimum seats", min_value=1, value=45, step=5)
+        preferred_building = rec_cols[1].selectbox("Preferred building", buildings)
+        available_only = rec_cols[2].checkbox("Available only", value=True)
+
+        recommendations = recommend_rooms(rooms, needed_capacity, preferred_building, available_only)
+        if recommendations:
+            st.dataframe(recommendations, use_container_width=True, hide_index=True)
+            best = recommendations[0]
+            st.success(
+                f"Best match: {best['room_id']} with {best['capacity']} seats "
+                f"({best['capacity_gap']} extra seats)."
+            )
+        else:
+            st.warning("No room matches the selected recommendation filters.")
 
     with sub_tab4:
-        st.subheader("Interactive Classroom Data Table")
-        sorted_rooms = quick_sort_rooms(facility_data["rooms"])
-        capacities = [room["capacity"] for room in sorted_rooms]
-        min_capacity = min(capacities)
-        max_capacity = max(capacities)
+        st.subheader("Interactive classroom table")
         selected_capacity = st.slider(
             "Capacity range",
-            min_value=min_capacity,
-            max_value=max_capacity,
-            value=(min_capacity, max_capacity),
-            step=10,
+            min_value=min(capacities),
+            max_value=max(capacities),
+            value=(min(capacities), max(capacities)),
+            step=5,
         )
-        filtered_rooms = filter_rooms_by_capacity(
-            sorted_rooms,
-            selected_capacity[0],
-            selected_capacity[1],
-        )
+        filtered_rooms = filter_rooms_by_capacity(sorted_rooms, selected_capacity[0], selected_capacity[1])
 
-        available_only = st.checkbox("Show available rooms only")
-        if available_only:
-            filtered_rooms = [
-                room for room in filtered_rooms
-                if room["status"] == "Available"
-            ]
+        status_filter = st.multiselect(
+            "Status",
+            ["Available", "Occupied", "Maintenance"],
+            default=["Available", "Occupied", "Maintenance"],
+        )
+        filtered_rooms = [room for room in filtered_rooms if room["status"] in status_filter]
 
         st.metric("Matching rooms", len(filtered_rooms))
-        st.dataframe(filtered_rooms, use_container_width=True)
+        st.dataframe(filtered_rooms, use_container_width=True, hide_index=True)
 
 # =====================================================================
 # TAB 3: Member 3 Logic (독립 모듈화 완료)
